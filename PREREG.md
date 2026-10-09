@@ -26,3 +26,12 @@ K5 K1 repeated with raw (not z-scored) intensities. Gate: |ARI change| < 0.05.
 
 ## Caveats
 Intensities are not standardized across sites; z-score per scan mitigates only partly. 40 patients; fold spread only. Labels are very imbalanced (background ~96% of sampled brain voxels). Post-treatment anatomy differs from pre-operative BraTS. No gate is changed after results; misses are reported as misses.
+
+## EXTENSION batch K6-K10 (written 2026-10-09 and committed before any extension score exists)
+EXTENDS 026-S (K1-K5): same 40 patients (data re-fetched from the same HF zip; all 200 file SHA256 re-verified against data_manifest.json), same preprocessing, sampling (20000 voxels per scan), patient-level folds (patient index mod 5), 200,000-voxel training subsample per fold and RF (30 trees, depth 12) as the K3 amendment. Overlap: K9/K10 re-use K3's model family; K7 re-runs K3 with features removed. Still partial; no CNN; no BRAINMAP-NET claim. Single seed (0) everywhere.
+K6 Per-patient ET Dice (RF as K3, pooled-fold predictions split by patient, patients with at least 50 sampled ET voxels only; n reported). Gate: median per-patient ET Dice > 0.20.
+K7 Modality ablation: RF trained without each of t1n, t1c, t2w, t2f in turn; ET Dice and macro Dice. Gate: removing t1c lowers ET Dice by >= 0.03 versus the full-feature RF in this run.
+K8 k-means k sensitivity (k = 3, 5, 8, z-scored; K1 procedure): ARI. Gate: best ARI over the three k > 0.10 (clustering recovers labels at some k). Reported as met/not met; expectation not met.
+K9 RF on spatial-context features (per modality: 5x5 patch mean and std = 8 features, plus the 4 intensities = 12 features). Gate: macro Dice > full-intensity RF (this run) + 0.02.
+K10 Class-balanced RF (class_weight balanced_subsample, otherwise as K3): macro Dice. Gate: macro Dice > K3 RF + 0.02.
+Reference RF: re-fit in this extension run (same config as K3), so its numbers can differ slightly from the original K3 through subsample randomness; both are reported. Sampled-voxel Dice is not comparable to BraTS leaderboards. No gate edits after scores. Misses are reported as misses.
