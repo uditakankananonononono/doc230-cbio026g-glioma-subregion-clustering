@@ -17,3 +17,13 @@ Prior-run context: an earlier run lost to a workspace rebuild had already shown 
 Gates met: 3 of 5 on paper; the only substantive positives are the supervised ones (K3, K4). Honest reading: unsupervised intensity clustering does not recover glioma subregions. Supervised models recover ET and edema (SNFH) to a useful degree even from raw voxel/patch intensities; the small necrotic core (NETC) and resection cavity (RC) are not recovered. The patch MLP beating the 4-intensity RF is expected, since patches add local texture. Not a CNN, not full-volume segmentation.
 
 Caveats: Dice is pooled over randomly sampled voxels, not full-volume segmentation Dice, so it is not comparable to published BraTS numbers; 40 patients; no per-fold CIs reported here (fold spread for K1 is in results.json); scanner/site intensity differences only partly handled by per-scan z-scoring; post-treatment anatomy.
+
+## Extension K6-K10 (prereg committed before scoring; single seed, 5-fold patient-grouped, 200k sampled training voxels per fold, Dice on 800k sampled voxels from 40 cases)
+Reference RF (K3 config re-fit): macro Dice 0.2333 (ET 0.403, NETC 0, SNFH 0.507, RC 0.023); reproduces original K3 macro.
+- K6 per-patient ET Dice (n=13 patients with >=50 ET voxels): median 0.330 (q25 0.245, q75 0.489). Gate (>0.20) MET.
+- K7 modality ablation, ET Dice: drop t1n 0.344, t1c 0.003, t2w 0.447, t2f 0.002. Dropping t1c lowers ET by 0.40 (>=0.03). Gate MET.
+- K8 k-means ARI vs labels: k=3 0.0033, k=5 0.0047, k=8 0.0146. Gate (best ARI >=0.10) NOT MET.
+- K9 5x5 in-plane patch mean/std features added: macro 0.375 vs 0.233 (ET 0.634, NETC 0.058, SNFH 0.630, RC 0.180). Gate (+0.02) MET. Caveat: sampled voxels, single seed, patches clipped at edges.
+- K10 class_weight=balanced_subsample: macro 0.227 vs 0.233. Gate (+0.02) NOT MET.
+Tally: K6, K7, K9 met; K8, K10 not met.
+Incident: src/ext_run.py ended silently after K8; part 2 (src/ext_run_part2.py) first died with exit 137 (OOM kill, no traceback) while building patch features; fixed by computing patch mean/std per case instead of holding the 100-column array. Logs: results/ext_run_part1.log, ext_run_part2.log.

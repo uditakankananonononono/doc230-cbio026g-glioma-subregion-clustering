@@ -24,10 +24,10 @@ for pi,c in enumerate(cases):
         for (i,j) in offs:   # edge-clipped patch coordinates
             a=np.clip(sel[:,0]+i,0,sh[0]-1); b=np.clip(sel[:,1]+j,0,sh[1]-1)
             pats.append(zq[a,b,sel[:,2]])
-    PA.append(np.stack(pats,1).astype(np.float32))
-    X.append(zz);XR.append(raw);Y.append(seg[tuple(sel.T)]);P.append(np.full(20000,pi))
+    pp=np.stack(pats,1).astype(np.float32).reshape(-1,4,25); PA.append(np.hstack([pp.mean(2),pp.std(2)])); del pp,pats,z,vols
+    X.append(zz);Y.append(seg[tuple(sel.T)]);P.append(np.full(20000,pi))
     print(pi,c,round(time.time()-t0),flush=True)
-X=np.concatenate(X);XR=np.concatenate(XR);Y=np.concatenate(Y).astype(int);P=np.concatenate(P);PA=np.concatenate(PA)
+X=np.concatenate(X);Y=np.concatenate(Y).astype(int);P=np.concatenate(P);PA=np.concatenate(PA)
 print('label frac',np.bincount(Y)/len(Y),flush=True)
 LAB=[3,1,2,4]; NAME={3:'ET',1:'NETC',2:'SNFH',4:'RC'}
 def dice_l(yt,yp,l): a=yt==l;b=yp==l; return float(2*(a&b).sum()/(a.sum()+b.sum()+1e-9))
@@ -58,7 +58,7 @@ def fit_rf(F,cw=None):
     return pr
 def rep(pr): return dict(dice={NAME[l]:dice_l(Y,pr,l) for l in LAB},macro=macro(Y,pr))
 pr_ref=fit_rf(X); R['ref_RF']=rep(pr_ref); print('ref',R['ref_RF'],flush=True)
-pa=PA.reshape(len(PA),4,25); CF=np.hstack([X,pa.mean(2),pa.std(2)]).astype(np.float32); del pa,PA,XR
+CF=np.hstack([X,PA]).astype(np.float32); del PA
 import gc; gc.collect()
 # K9
 pr9=fit_rf(CF); R['K9']=rep(pr9); R['K9']['gate_met']=bool(R['K9']['macro']>R['ref_RF']['macro']+0.02); print('K9',R['K9'],flush=True)
