@@ -29,7 +29,7 @@ Tally: K6, K7, K9 met; K8, K10 not met.
 Incident: src/ext_run.py ended silently after K8; part 2 (src/ext_run_part2.py) first died with exit 137 (OOM kill, no traceback) while building patch features; fixed by computing patch mean/std per case instead of holding the 100-column array. Logs: results/ext_run_part1.log, ext_run_part2.log.
 
 ### Gate review corrections (2026-10-09; wording only, tally unchanged at 3/5)
-- K7: dropping t2f also collapses ET to 0.002, SNFH to 0.0 and macro to 0.001. Read this as a likely degenerate RF (all-class collapse), not a clean ablation of t2f. Effect sizes are single seed with a fresh voxel subsample per ablation, so they are not precise. The t1c drop (ET 0.403 to 0.003) is likewise large enough to be partly a degenerate fit.
+- K7: dropping t2f also collapses ET to 0.002, SNFH to 0.0 and macro to 0.001. Read this as a likely degenerate RF (all-class collapse), not a clean ablation of t2f. Effect sizes are single seed with a fresh voxel subsample per ablation, so they are not precise. The t1c drop (ET 0.403 to 0.003) is not the same all-class collapse: SNFH stays 0.479 and macro 0.127, so it is a large effect but not shown to be degenerate.
 - K9: macro 0.375 beats K3 partly through neighbourhood information, and ET 0.634 does not exceed the K4 MLP (ET 0.649). Do not read it as new. Dice is pooled over sampled voxels, not full-volume Dice.
 - K10: flat macro hides a per-class trade: SNFH 0.507 to 0.312, RC 0.023 to 0.167, NETC 0 to 0.038, ET 0.403 to 0.392.
 - K6-K8 were produced by part 1, which died before writing JSON; the tally for them traces to results/ext_run_part1.log. results/ext_results.json is RECONSTRUCTED from that log (K6-K8, parsed verbatim) plus part 2's JSON (K9, K10).
