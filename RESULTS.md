@@ -22,8 +22,15 @@ Caveats: Dice is pooled over randomly sampled voxels, not full-volume segmentati
 Reference RF (K3 config re-fit): macro Dice 0.2333 (ET 0.403, NETC 0, SNFH 0.507, RC 0.023); reproduces original K3 macro.
 - K6 per-patient ET Dice (n=13 patients with >=50 ET voxels): median 0.330 (q25 0.245, q75 0.489). Gate (>0.20) MET.
 - K7 modality ablation, ET Dice: drop t1n 0.344, t1c 0.003, t2w 0.447, t2f 0.002. Dropping t1c lowers ET by 0.40 (>=0.03). Gate MET.
-- K8 k-means ARI vs labels: k=3 0.0033, k=5 0.0047, k=8 0.0146. Gate (best ARI >=0.10) NOT MET.
+- K8 k-means ARI vs labels: k=3 0.0033, k=5 0.0047, k=8 0.0146. Gate (best ARI >0.10, as in PREREG) NOT MET.
 - K9 5x5 in-plane patch mean/std features added: macro 0.375 vs 0.233 (ET 0.634, NETC 0.058, SNFH 0.630, RC 0.180). Gate (+0.02) MET. Caveat: sampled voxels, single seed, patches clipped at edges.
 - K10 class_weight=balanced_subsample: macro 0.227 vs 0.233. Gate (+0.02) NOT MET.
 Tally: K6, K7, K9 met; K8, K10 not met.
 Incident: src/ext_run.py ended silently after K8; part 2 (src/ext_run_part2.py) first died with exit 137 (OOM kill, no traceback) while building patch features; fixed by computing patch mean/std per case instead of holding the 100-column array. Logs: results/ext_run_part1.log, ext_run_part2.log.
+
+### Gate review corrections (2026-10-09; wording only, tally unchanged at 3/5)
+- K7: dropping t2f also collapses ET to 0.002, SNFH to 0.0 and macro to 0.001. Read this as a likely degenerate RF (all-class collapse), not a clean ablation of t2f. Effect sizes are single seed with a fresh voxel subsample per ablation, so they are not precise. The t1c drop (ET 0.403 to 0.003) is likewise large enough to be partly a degenerate fit.
+- K9: macro 0.375 beats K3 partly through neighbourhood information, and ET 0.634 does not exceed the K4 MLP (ET 0.649). Do not read it as new. Dice is pooled over sampled voxels, not full-volume Dice.
+- K10: flat macro hides a per-class trade: SNFH 0.507 to 0.312, RC 0.023 to 0.167, NETC 0 to 0.038, ET 0.403 to 0.392.
+- K6-K8 were produced by part 1, which died before writing JSON; the tally for them traces to results/ext_run_part1.log. results/ext_results.json is RECONSTRUCTED from that log (K6-K8, parsed verbatim) plus part 2's JSON (K9, K10).
+- K8 gate wording aligned to the prereg (ARI > 0.10).
